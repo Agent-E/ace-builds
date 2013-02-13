@@ -1,9 +1,10 @@
 "no use strict";
+;(function(window) {
+if (typeof window.window != "undefined" && window.document) {
+    return;
+}
 
-if (typeof window != "undefined" && window.document)
-    throw "atempt to load ace worker into main window instead of webWorker";
-
-var console = {
+window.console = {
     log: function() {
         var msgs = Array.prototype.slice.call(arguments, 0);
         postMessage({type: "log", data: msgs});
@@ -13,11 +14,10 @@ var console = {
         postMessage({type: "log", data: msgs});
     }
 };
-var window = {
-    console: console
-};
+window.window = window;
+window.ace = window;
 
-var normalizeModule = function(parentId, moduleName) {
+window.normalizeModule = function(parentId, moduleName) {
     // normalize plugin requires
     if (moduleName.indexOf("!") !== -1) {
         var chunks = moduleName.split("!");
@@ -37,7 +37,7 @@ var normalizeModule = function(parentId, moduleName) {
     return moduleName;
 };
 
-var require = function(parentId, id) {
+window.require = function(parentId, id) {
     if (!id.charAt)
         throw new Error("worker.js require() accepts only (parentId, id) as arguments");
 
@@ -64,7 +64,7 @@ var require = function(parentId, id) {
 require.modules = {};
 require.tlns = {};
 
-var define = function(id, deps, factory) {
+window.define = function(id, deps, factory) {
     if (arguments.length == 2) {
         factory = deps;
         if (typeof id != "string") {
@@ -96,11 +96,11 @@ var define = function(id, deps, factory) {
     };
 };
 
-function initBaseUrls(topLevelNamespaces) {
+window.initBaseUrls  = function initBaseUrls(topLevelNamespaces) {
     require.tlns = topLevelNamespaces;
 }
 
-function initSender() {
+window.initSender = function initSender() {
 
     var EventEmitter = require(null, "ace/lib/event_emitter").EventEmitter;
     var oop = require(null, "ace/lib/oop");
@@ -132,10 +132,10 @@ function initSender() {
     return new Sender();
 }
 
-var main;
-var sender;
+window.main = null;
+window.sender = null;
 
-onmessage = function(e) {
+window.onmessage = function(e) {
     var msg = e.data;
     if (msg.command) {
         if (main[msg.command])
@@ -154,9 +154,9 @@ onmessage = function(e) {
         sender._emit(msg.event, msg.data);
     }
 };
-// vim:set ts=4 sts=4 sw=4 st:
+})(this);// vim:set ts=4 sts=4 sw=4 st:
 
-define('ace/lib/fixoldbrowsers', ['require', 'exports', 'module' , 'ace/lib/regexp', 'ace/lib/es5-shim'], function(require, exports, module) {
+ace.define('ace/lib/fixoldbrowsers', ['require', 'exports', 'module' , 'ace/lib/regexp', 'ace/lib/es5-shim'], function(require, exports, module) {
 
 
 require("./regexp");
@@ -164,7 +164,7 @@ require("./es5-shim");
 
 });
  
-define('ace/lib/regexp', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/lib/regexp', ['require', 'exports', 'module' ], function(require, exports, module) {
 
     var real = {
             exec: RegExp.prototype.exec,
@@ -236,7 +236,7 @@ define('ace/lib/regexp', ['require', 'exports', 'module' ], function(require, ex
 
 });
 
-define('ace/lib/es5-shim', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/lib/es5-shim', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 function Empty() {}
 
@@ -955,7 +955,7 @@ var toObject = function (o) {
 
 });
 
-define('ace/lib/event_emitter', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/lib/event_emitter', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 
 var EventEmitter = {};
@@ -1040,7 +1040,7 @@ exports.EventEmitter = EventEmitter;
 
 });
 
-define('ace/lib/oop', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/lib/oop', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 
 exports.inherits = (function() {
@@ -1065,7 +1065,7 @@ exports.implement = function(proto, mixin) {
 
 });
 
-define('ace/mode/php_worker', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/worker/mirror', 'ace/mode/php/php'], function(require, exports, module) {
+ace.define('ace/mode/php_worker', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/worker/mirror', 'ace/mode/php/php'], function(require, exports, module) {
 
 
 var oop = require("../lib/oop");
@@ -1107,7 +1107,7 @@ oop.inherits(PhpWorker, Mirror);
 }).call(PhpWorker.prototype);
 
 });
-define('ace/worker/mirror', ['require', 'exports', 'module' , 'ace/document', 'ace/lib/lang'], function(require, exports, module) {
+ace.define('ace/worker/mirror', ['require', 'exports', 'module' , 'ace/document', 'ace/lib/lang'], function(require, exports, module) {
 
 
 var Document = require("../document").Document;
@@ -1150,7 +1150,7 @@ var Mirror = exports.Mirror = function(sender) {
 
 });
 
-define('ace/document', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/event_emitter', 'ace/range', 'ace/anchor'], function(require, exports, module) {
+ace.define('ace/document', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/event_emitter', 'ace/range', 'ace/anchor'], function(require, exports, module) {
 
 
 var oop = require("./lib/oop");
@@ -1497,7 +1497,7 @@ var Document = function(text) {
 exports.Document = Document;
 });
 
-define('ace/range', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/range', ['require', 'exports', 'module' ], function(require, exports, module) {
 var Range = function(startRow, startColumn, endRow, endColumn) {
     this.start = {
         row: startRow,
@@ -1739,7 +1739,7 @@ Range.fromPoints = function(start, end) {
 exports.Range = Range;
 });
 
-define('ace/anchor', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/event_emitter'], function(require, exports, module) {
+ace.define('ace/anchor', ['require', 'exports', 'module' , 'ace/lib/oop', 'ace/lib/event_emitter'], function(require, exports, module) {
 
 
 var oop = require("./lib/oop");
@@ -1891,7 +1891,7 @@ var Anchor = exports.Anchor = function(doc, row, column) {
 
 });
 
-define('ace/lib/lang', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/lib/lang', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 
 exports.stringReverse = function(string) {
@@ -2070,7 +2070,7 @@ exports.delayedCall = function(fcn, defaultTimeout) {
 
 
 
-define('ace/mode/php/php', ['require', 'exports', 'module' ], function(require, exports, module) {
+ace.define('ace/mode/php/php', ['require', 'exports', 'module' ], function(require, exports, module) {
 
 var PHP = {Constants:{}};
 
